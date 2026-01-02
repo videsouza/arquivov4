@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Validador de Planilhas | Gestão Documental</title>
+  <link rel="stylesheet" href="govbr.css">
+</head>
+<body>
+
+<a href="#conteudo" class="skip-link">Pular para o conteúdo</a>
+
+<div class="barra-institucional">
+  Sistema Interno – Gestão Documental
+</div>
+
+<main id="conteudo" class="container">
+  <h1>Validador de Planilhas Arquivísticas</h1>
+
+  <form>
+    <label for="arquivo">Selecionar planilha (CSV ou XLSX)</label>
+    <input type="file" id="arquivo" accept=".csv,.xlsx">
+
+    <button type="submit">Validar</button>
+  </form>
+
+  <section aria-live="polite" id="resultado"></section>
+</main>
+
+</body>
+</html>
