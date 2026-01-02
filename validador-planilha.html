@@ -105,6 +105,20 @@
       <div id="relatorio"></div>
     </section>
 
+    <!-- ================= EXPORTAÇÃO ================= -->
+<section id="exportacao-section" hidden>
+  <h2>Exportação</h2>
+
+  <button id="btn-exportar-csv">
+    Baixar CSV tratado
+  </button>
+
+  <button id="btn-exportar-xlsx">
+    Baixar XLSX tratado
+  </button>
+</section>
+
+
     <footer>
       <p>© 2025 <strong>Sistema de Apoio à Gestão Documental</strong></p>
       <p>Desenvolvido por Vinicius A. de Souza</p>
@@ -131,6 +145,8 @@
   let workbookGlobal = null;
   let dadosAtuais = [];
   let columnConfig = [];
+  let dadosProcessados = [];
+
 
   inputArquivo.addEventListener('change', handleUpload);
 
@@ -254,23 +270,81 @@
 
   document.getElementById('btn-aplicar').onclick = aplicarColunas;
 
-  function aplicarColunas() {
-    const linhas = dadosAtuais.slice(1);
-    const colAtivas = columnConfig.filter(c => !c.excluir);
+function aplicarColunas() {
+  const linhas = dadosAtuais.slice(1);
+  const colAtivas = columnConfig.filter(c => !c.excluir);
 
-    let removidas = 0;
-    let vazios = 0;
-    let validas = [];
+  const cabecalho = colAtivas.map(c => c.novoNome || c.original);
 
-    linhas.forEach(l => {
-      const nova = colAtivas.map(c => l[c.index]);
-      if (linhaLixo(nova)) { removidas++; return; }
-      nova.forEach(v => { if (valorVazio(v)) vazios++; });
-      validas.push(nova);
+  let removidas = 0;
+  let vazios = 0;
+  let validas = [];
+
+  linhas.forEach(l => {
+    const nova = colAtivas.map(c => l[c.index]);
+
+    if (linhaLixo(nova)) {
+      removidas++;
+      return;
+    }
+
+    nova.forEach(v => {
+      if (valorVazio(v)) vazios++;
     });
 
-    exibirRelatorio(linhas.length, validas.length, removidas, vazios);
+    validas.push(nova);
+  });
+
+  dadosProcessados = [cabecalho, ...validas];
+
+  exibirRelatorio(linhas.length, validas.length, removidas, vazios);
+
+  document.getElementById('exportacao-section').hidden = false;
+}
+
+  /* ===== EXPORTAÇÃO CSV ===== */
+
+  document
+    .getElementById('btn-exportar-csv')
+    .addEventListener('click', exportarCSV);
+
+  function exportarCSV() {
+    if (!dadosProcessados.length) return;
+
+    const csv = Papa.unparse(dadosProcessados);
+
+    const blob = new Blob([csv], {
+      type: 'text/csv;charset=utf-8;'
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'planilha_tratada.csv';
+    a.click();
+
+    URL.revokeObjectURL(url);
   }
+
+
+  /* ===== EXPORTAÇÃO XLSX ===== */
+
+  document
+    .getElementById('btn-exportar-xlsx')
+    .addEventListener('click', exportarXLSX);
+
+  function exportarXLSX() {
+    if (!dadosProcessados.length) return;
+
+    const ws = XLSX.utils.aoa_to_sheet(dadosProcessados);
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Dados Tratados');
+
+    XLSX.writeFile(wb, 'planilha_tratada.xlsx');
+  }
+
 
   function valorVazio(v) {
     return v == null || (typeof v === 'string' && v.trim() === '');
