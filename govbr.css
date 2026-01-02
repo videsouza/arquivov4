@@ -119,3 +119,14 @@ footer {
   font-size: 14px;
   color: var(--gov-muted);
 }
+
+/* Barra institucional GOV.BR */
+.barra-institucional {
+  background-color: #1351b4; /* azul GOV.BR */
+  color: #ffffff;
+  font-family: 'Rawline', Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  line-height: 1.4;
+}
