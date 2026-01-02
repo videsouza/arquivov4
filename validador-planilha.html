@@ -226,20 +226,48 @@
     estruturaSection.hidden = true;
   }
 
-  function renderPreview(dados) {
-    preview.innerHTML = '';
-    const table = document.createElement('table');
-    dados.slice(0, 5).forEach((linha, i) => {
-      const tr = document.createElement('tr');
-      linha.forEach(c => {
-        const el = document.createElement(i === 0 ? 'th' : 'td');
-        el.textContent = c ?? '';
-        tr.appendChild(el);
-      });
-      table.appendChild(tr);
-    });
-    preview.appendChild(table);
+function renderPreview(dados) {
+  preview.innerHTML = '';
+
+  if (!dados.length) {
+    preview.innerHTML = '<p>Nenhum dado para exibir.</p>';
+    return;
   }
+
+  const table = document.createElement('table');
+  table.className = 'preview-table';
+
+  const thead = document.createElement('thead');
+  const trHead = document.createElement('tr');
+
+  dados[0].forEach((col, i) => {
+    const th = document.createElement('th');
+    th.innerHTML = `
+      <div class="preview-col-num">#${i + 1}</div>
+      <div class="preview-col-name">${col ?? ''}</div>
+    `;
+    trHead.appendChild(th);
+  });
+
+  thead.appendChild(trHead);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+
+  dados.slice(1, 6).forEach(linha => {
+    const tr = document.createElement('tr');
+    linha.forEach(cel => {
+      const td = document.createElement('td');
+      td.textContent = cel ?? '';
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  preview.appendChild(table);
+}
+
 
 function montarGerenciamentoColunas(cabecalhos) {
   colunasContainer.innerHTML = '';
