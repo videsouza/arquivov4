@@ -1,84 +1,136 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Hub de Serviços | Gestão Documental</title>
 
-  <!-- Google Fonts -->
-  <!-- Fonte oficial GOV.BR -->
-  <link href="https://fonts.googleapis.com/css2?family=Rawline:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <!-- Fonte institucional -->
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Rawline:wght@300;400;600;700&display=swap">
 
-    <!-- CSS institucional separado (Design System GOV.BR + e-MAG) -->
+  <!-- Ícones (opcional – remover em v1.1 se desejar SVG puro) -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- CSS institucional -->
   <link rel="stylesheet" href="govbr.css">
 </head>
+
 <body>
 
-  <a href="#conteudo" class="skip-link">Pular para o conteúdo principal</a>
+  <a href="#conteudo" class="skip-link">
+    Pular para o conteúdo principal
+  </a>
 
-  <!-- Barra institucional GOV.BR -->
-  <div style="background:#1351b4;color:#fff;padding:12px 20px;font-size:14px;font-weight:600;">
+  <!-- Barra institucional -->
+  <div class="barra-institucional">
     Sistema Interno – Gestão Documental
   </div>
 
-  <main id="conteudo" role="main">
-  <div class="container">
+  <main id="conteudo">
+    <div class="container">
 
-    
+      <section class="services-grid" aria-label="Serviços disponíveis">
 
-    <section class="services-grid" aria-label="Serviços disponíveis">
+        <a href="super-analista.html"
+           class="service-card"
+           aria-label="Acessar Análise de Dados">
+          <div class="card-icon">
+            <i class="fas fa-chart-pie" aria-hidden="true"></i>
+          </div>
+          <h3 class="card-title">Análise de Dados</h3>
+          <p class="card-desc">
+            Dashboards analíticos com gráficos e insights automáticos
+            a partir de planilhas de acervo.
+          </p>
+          <span class="card-action">Acessar ferramenta</span>
+        </a>
 
-      <a href="super-analista.html" class="service-card" aria-label="Acessar Análise de Dados">
-        <div class="card-icon"><i class="fas fa-chart-pie" aria-hidden="true"></i></div>
-        <h3 class="card-title">Análise de Dados</h3>
-        <p class="card-desc">Dashboards analíticos com gráficos e insights automáticos a partir de planilhas de acervo.</p>
-        <span class="card-action">Acessar ferramenta</span>
-      </a>
+        <a href="otimizador-eliminacao.html"
+           class="service-card"
+           aria-label="Acessar Otimizador de Eliminação">
+          <div class="card-icon">
+            <i class="fas fa-recycle" aria-hidden="true"></i>
+          </div>
+          <h3 class="card-title">Otimizador de Eliminação</h3>
+          <p class="card-desc">
+            Criação inteligente de blocos de eliminação
+            maximizando o aproveitamento físico.
+          </p>
+          <span class="card-action">Otimizar boxes</span>
+        </a>
 
-      <a href="otimizador-eliminacao.html" class="service-card" aria-label="Acessar Otimizador de Eliminação">
-        <div class="card-icon"><i class="fas fa-recycle" aria-hidden="true"></i></div>
-        <h3 class="card-title">Otimizador de Eliminação</h3>
-        <p class="card-desc">Criação inteligente de blocos de eliminação maximizando o aproveitamento físico.</p>
-        <span class="card-action">Otimizar boxes</span>
-      </a>
+        <a href="etiqueta-gemini.html"
+           class="service-card"
+           aria-label="Acessar Impressor de Etiquetas">
+          <div class="card-icon">
+            <i class="fas fa-print" aria-hidden="true"></i>
+          </div>
+          <h3 class="card-title">Impressor de Etiquetas</h3>
+          <p class="card-desc">
+            Geração automática de etiquetas arquivísticas
+            padronizadas prontas para impressão.
+          </p>
+          <span class="card-action">Criar etiquetas</span>
+        </a>
 
-      <a href="etiqueta-gemini.html" class="service-card" aria-label="Acessar Impressor de Etiquetas">
-        <div class="card-icon"><i class="fas fa-print" aria-hidden="true"></i></div>
-        <h3 class="card-title">Impressor de Etiquetas</h3>
-        <p class="card-desc">Geração automática de etiquetas arquivísticas padronizadas prontas para impressão.</p>
-        <span class="card-action">Criar etiquetas</span>
-      </a>
+        <a href="visualiza-boxes-gemini.html"
+           class="service-card"
+           aria-label="Acessar Visualizador de Boxes">
+          <div class="card-icon">
+            <i class="fas fa-boxes" aria-hidden="true"></i>
+          </div>
+          <h3 class="card-title">Visualizador de Boxes</h3>
+          <p class="card-desc">
+            Mapa visual interativo para controle
+            da ocupação física do arquivo.
+          </p>
+          <span class="card-action">Visualizar mapa</span>
+        </a>
 
-      <a href="visualiza-boxes-gemini.html" class="service-card" aria-label="Acessar Visualizador de Boxes">
-        <div class="card-icon"><i class="fas fa-boxes" aria-hidden="true"></i></div>
-        <h3 class="card-title">Visualizador de Boxes</h3>
-        <p class="card-desc">Mapa visual interativo para controle da ocupação física do arquivo.</p>
-        <span class="card-action">Visualizar mapa</span>
-      </a>
+        <a href="https://corretor-datas.onrender.com/"
+           class="service-card"
+           aria-label="Acessar Corretor de Datas">
+          <div class="card-icon">
+            <i class="fas fa-calendar-check" aria-hidden="true"></i>
+          </div>
+          <h3 class="card-title">Corretor de Datas</h3>
+          <p class="card-desc">
+            Validação automática das datas prováveis
+            de eliminação em planilhas.
+          </p>
+          <span class="card-action">Corrigir planilha</span>
+        </a>
 
-      <a href="https://corretor-datas.onrender.com/" class="service-card" aria-label="Acessar Corretor de Datas">
-        <div class="card-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></div>
-        <h3 class="card-title">Corretor de Datas</h3>
-        <p class="card-desc">Validação automática das datas prováveis de eliminação em planilhas.</p>
-        <span class="card-action">Corrigir planilha</span>
-      </a>
+        <div class="service-card"
+             style="opacity: 0.6; cursor: default;"
+             aria-disabled="true">
+          <div class="card-icon">
+            <i class="fas fa-sitemap" aria-hidden="true"></i>
+          </div>
+          <h3 class="card-title">Fluxo de Trabalho</h3>
+          <p class="card-desc">
+            Gestão completa dos fluxos de guarda permanente
+            e eliminação documental.
+          </p>
+          <span class="card-action">Em desenvolvimento</span>
+        </div>
 
-      <div class="service-card" style="opacity:0.6; cursor:default;" aria-disabled="true">
-        <div class="card-icon"><i class="fas fa-sitemap" aria-hidden="true"></i></div>
-        <h3 class="card-title">Fluxo de Trabalho</h3>
-        <p class="card-desc">Gestão completa dos fluxos de guarda permanente e eliminação documental.</p>
-        <span class="card-action">Em desenvolvimento</span>
-      
+      </section>
 
-    </section>
+      <footer>
+        <p>
+          © 2025 <strong>Sistema de Apoio à Gestão Documental</strong>
+        </p>
+        <p>
+          Desenvolvido por Vinicius A. de Souza com ChatGPT e Gemini.
+        </p>
+      </footer>
 
-    <footer>
-      <p>&copy; 2025 <strong>Sistema de Apoio à Gestão Documental</strong></p>
-      <p>Desenvolvido por Vinicius A. de Souza</p>
-    </footer>
+    </div>
+  </main>
 
-  </div>
-</main>
 </body>
 </html>
