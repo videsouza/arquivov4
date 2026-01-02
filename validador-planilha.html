@@ -77,6 +77,21 @@
       </section>
 
 
+      <!-- ================= PASSO 4 ================= -->
+<section id="acoes-section" hidden>
+  <h2>4. Aplicação e validação</h2>
+
+  <button id="btn-aplicar">
+    Aplicar colunas e validar dados
+  </button>
+</section>
+
+<!-- ================= RELATÓRIO ================= -->
+<section id="relatorio-section" hidden aria-live="polite">
+  <h2>Relatório de validação</h2>
+  <div id="relatorio"></div>
+</section>
+      
       <!-- Rodapé -->
       <footer>
         <p>
@@ -96,7 +111,7 @@
 
   <!-- ================= SCRIPT PRINCIPAL ================= -->
   <script>
-    <script>
+   
   const inputArquivo = document.getElementById('arquivo');
   const preview = document.getElementById('preview');
   const abasContainer = document.getElementById('abas-container');
@@ -253,6 +268,103 @@
       });
     });
   }
+
+    <script>
+  const btnAplicar = document.getElementById('btn-aplicar');
+  const acoesSection = document.getElementById('acoes-section');
+  const relatorioSection = document.getElementById('relatorio-section');
+  const relatorioDiv = document.getElementById('relatorio');
+
+  let dadosProcessados = [];
+
+  btnAplicar.addEventListener('click', aplicarColunasEValidar);
+
+  function aplicarColunasEValidar() {
+    if (!dadosAtuais.length) return;
+
+    const cabecalhoOriginal = dadosAtuais[0];
+    const linhas = dadosAtuais.slice(1);
+
+    const colunasAtivas = columnConfig.filter(c => !c.excluir);
+
+    const novoCabecalho = colunasAtivas.map(c => c.novoNome || c.original);
+
+    let linhasValidas = [];
+    let linhasRemovidas = 0;
+    let camposVazios = 0;
+
+    linhas.forEach(linha => {
+      // Remove colunas excluídas
+      const novaLinha = colunasAtivas.map(c => linha[c.index]);
+
+      // Verifica linha lixo
+      if (linhaLixo(novaLinha)) {
+        linhasRemovidas++;
+        return;
+      }
+
+      // Validação de campos vazios
+      novaLinha.forEach(valor => {
+        if (valorVazio(valor)) {
+          camposVazios++;
+        }
+      });
+
+      linhasValidas.push(novaLinha);
+    });
+
+    dadosProcessados = [novoCabecalho, ...linhasValidas];
+
+    exibirRelatorio({
+      totalLinhas: linhas.length,
+      linhasValidas: linhasValidas.length,
+      linhasRemovidas,
+      camposVazios
+    });
+  }
+
+  /* ================= VALIDAÇÕES ================= */
+
+  function valorVazio(valor) {
+    return (
+      valor === null ||
+      valor === undefined ||
+      (typeof valor === 'string' && valor.trim() === '')
+    );
+  }
+
+  function linhaLixo(linha) {
+    return linha.every(celula =>
+      valorVazio(celula) ||
+      /^[\-\*\_]+$/.test(String(celula).trim())
+    );
+  }
+
+  /* ================= RELATÓRIO ================= */
+
+  function exibirRelatorio(resumo) {
+    relatorioDiv.innerHTML = `
+      <ul>
+        <li><strong>Total de linhas analisadas:</strong> ${resumo.totalLinhas}</li>
+        <li><strong>Linhas válidas:</strong> ${resumo.linhasValidas}</li>
+        <li><strong>Linhas removidas (lixo):</strong> ${resumo.linhasRemovidas}</li>
+        <li><strong>Campos vazios encontrados:</strong> ${resumo.camposVazios}</li>
+      </ul>
+    `;
+
+    relatorioSection.hidden = false;
+  }
+
+  /* Exibir botão quando colunas estiverem prontas */
+  const observer = new MutationObserver(() => {
+    if (columnConfig.length) {
+      acoesSection.hidden = false;
+    }
+  });
+
+  observer.observe(document.getElementById('colunas-container'), {
+    childList: true
+  });
 </script>
 
 
