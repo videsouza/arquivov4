@@ -6,31 +6,28 @@
 
   <title>Validador de Planilhas | Gestão Documental</title>
 
-  <!-- Fonte institucional GOV.BR -->
+  <!-- Fonte institucional -->
   <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Rawline:wght@300;400;600;700&display=swap">
 
-  <!-- Ícones (opcional, será removido em v1.1 se desejar) -->
+  <!-- Ícones (opcional) -->
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- CSS institucional -->
+  <!-- CSS GOV.BR -->
   <link rel="stylesheet" href="govbr.css">
 </head>
 
 <body>
 
-  <!-- Acessibilidade -->
   <a href="#conteudo" class="skip-link">
     Pular para o conteúdo principal
   </a>
 
-  <!-- Barra GOV.BR -->
   <div class="barra-institucional">
     Sistema Interno – Gestão Documental
   </div>
 
-  <!-- Conteúdo principal -->
   <main id="conteudo">
     <div class="container">
 
@@ -40,14 +37,16 @@
       <section>
         <h2>1. Seleção da planilha</h2>
 
-        <label for="arquivo">
-          Arquivo (CSV, XLS ou XLSX)
-        </label>
+        <label for="arquivo">Arquivo (CSV, XLS ou XLSX)</label>
         <input
           type="file"
           id="arquivo"
           accept=".csv,.xls,.xlsx"
+          aria-describedby="arquivo-ajuda"
         >
+        <p id="arquivo-ajuda" class="hint">
+          Formatos aceitos: CSV, XLS e XLSX.
+        </p>
 
         <div id="abas-container" hidden>
           <label for="aba">Selecionar aba</label>
@@ -58,49 +57,37 @@
       <!-- ================= PASSO 2 ================= -->
       <section>
         <h2>2. Pré-visualização (5 primeiras linhas)</h2>
-
         <div id="preview" tabindex="0" aria-live="polite">
           <p>Nenhuma planilha carregada.</p>
         </div>
       </section>
 
       <!-- ================= PASSO 3 ================= -->
-    <section id="colunas-section" hidden>
-      <h2>3. Gerenciamento de colunas</h2>
-
-      <p>
-        Selecione as colunas que deseja remover e ajuste os nomes dos
-        cabeçalhos conforme o padrão institucional.
-      </p>
+      <section id="colunas-section" hidden>
+        <h2>3. Gerenciamento de colunas</h2>
+        <p>
+          Marque as colunas que deseja remover e ajuste os nomes dos
+          cabeçalhos conforme o padrão institucional.
+        </p>
 
         <div id="colunas-container"></div>
       </section>
 
-
       <!-- ================= PASSO 4 ================= -->
-<section id="acoes-section" hidden>
-  <h2>4. Aplicação e validação</h2>
+      <section id="acoes-section" hidden>
+        <h2>4. Aplicação e validação</h2>
+        <button id="btn-aplicar">
+          Aplicar colunas e validar dados
+        </button>
+      </section>
 
-  <button id="btn-aplicar">
-    Aplicar colunas e validar dados
-  </button>
-</section>
+      <!-- ================= RELATÓRIO ================= -->
+      <section id="relatorio-section" hidden aria-live="polite">
+        <h2>Relatório de validação</h2>
+        <div id="relatorio"></div>
+      </section>
 
-<!-- ================= RELATÓRIO ================= -->
-<section id="relatorio-section" hidden aria-live="polite">
-  <h2>Relatório de validação</h2>
-  <div id="relatorio"></div>
-</section>
-      
-      <!-- Rodapé -->
-      <footer>
-        <p>
-          © 2025 <strong>Sistema de Apoio à Gestão Documental</strong>
-        </p>
-        <p>
-          Desenvolvido por Vinicius A. de Souza
-        </p>
-      </footer>
+
 
     </div>
   </main>
@@ -111,262 +98,240 @@
 
   <!-- ================= SCRIPT PRINCIPAL ================= -->
   <script>
-   
-  const inputArquivo = document.getElementById('arquivo');
-  const preview = document.getElementById('preview');
-  const abasContainer = document.getElementById('abas-container');
-  const selectAba = document.getElementById('aba');
+    const inputArquivo = document.getElementById('arquivo');
+    const preview = document.getElementById('preview');
+    const abasContainer = document.getElementById('abas-container');
+    const selectAba = document.getElementById('aba');
 
-  const colunasSection = document.getElementById('colunas-section');
-  const colunasContainer = document.getElementById('colunas-container');
+    const colunasSection = document.getElementById('colunas-section');
+    const colunasContainer = document.getElementById('colunas-container');
+    const acoesSection = document.getElementById('acoes-section');
+    const btnAplicar = document.getElementById('btn-aplicar');
 
-  let workbookGlobal = null;
-  let dadosAtuais = [];
-  let columnConfig = [];
+    const relatorioSection = document.getElementById('relatorio-section');
+    const relatorioDiv = document.getElementById('relatorio');
 
-  inputArquivo.addEventListener('change', handleUpload);
+    let workbookGlobal = null;
+    let dadosAtuais = [];
+    let dadosProcessados = [];
+    let columnConfig = [];
 
-  function handleUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+    inputArquivo.addEventListener('change', handleUpload);
+    btnAplicar.addEventListener('click', aplicarColunasEValidar);
 
-    preview.innerHTML = '<p>Processando arquivo...</p>';
-    colunasSection.hidden = true;
+    /* ================= UPLOAD ================= */
 
-    const reader = new FileReader();
+    function handleUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-    if (file.name.toLowerCase().endsWith('.csv')) {
-      reader.onload = e => {
-        const resultado = Papa.parse(e.target.result, {
-          skipEmptyLines: true
-        });
-        abasContainer.hidden = true;
-        processarDados(resultado.data);
-      };
-      reader.readAsText(file);
-    } else {
-      reader.onload = e => {
-        const data = new Uint8Array(e.target.result);
-        workbookGlobal = XLSX.read(data, { type: 'array' });
+      preview.innerHTML = '<p>Processando arquivo...</p>';
+      colunasSection.hidden = true;
+      acoesSection.hidden = true;
+      relatorioSection.hidden = true;
 
-        const abas = workbookGlobal.SheetNames;
-        popularAbas(abas);
-        carregarAba(abas[0]);
-      };
-      reader.readAsArrayBuffer(file);
-    }
-  }
+      const reader = new FileReader();
 
-  function popularAbas(abas) {
-    selectAba.innerHTML = '';
-    abas.forEach(nome => {
-      const option = document.createElement('option');
-      option.value = nome;
-      option.textContent = nome;
-      selectAba.appendChild(option);
-    });
+      if (file.name.toLowerCase().endsWith('.csv')) {
+        reader.onload = e => {
+          const resultado = Papa.parse(e.target.result, {
+            skipEmptyLines: true
+          });
+          abasContainer.hidden = true;
+          processarDados(resultado.data);
+        };
+        reader.readAsText(file);
+      } else {
+        reader.onload = e => {
+          const data = new Uint8Array(e.target.result);
+          workbookGlobal = XLSX.read(data, { type: 'array' });
 
-    abasContainer.hidden = abas.length <= 1;
-    selectAba.onchange = () => carregarAba(selectAba.value);
-  }
-
-  function carregarAba(nome) {
-    const sheet = workbookGlobal.Sheets[nome];
-    const dados = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-    processarDados(dados);
-  }
-
-  function processarDados(dados) {
-    dadosAtuais = dados;
-    renderPreview(dados);
-    montarGerenciamentoColunas(dados[0]);
-  }
-
-  function renderPreview(dados) {
-    preview.innerHTML = '';
-
-    if (!dados || dados.length === 0) {
-      preview.innerHTML = '<p>Planilha vazia.</p>';
-      return;
+          const abas = workbookGlobal.SheetNames;
+          popularAbas(abas);
+          carregarAba(abas[0]);
+        };
+        reader.readAsArrayBuffer(file);
+      }
     }
 
-    const tabela = document.createElement('table');
-    tabela.className = 'preview-table';
-
-    dados.slice(0, 5).forEach((linha, index) => {
-      const tr = document.createElement('tr');
-
-      linha.forEach(celula => {
-        const cel = document.createElement(index === 0 ? 'th' : 'td');
-        cel.textContent = celula ?? '';
-        tr.appendChild(cel);
+    function popularAbas(abas) {
+      selectAba.innerHTML = '';
+      abas.forEach(nome => {
+        const option = document.createElement('option');
+        option.value = nome;
+        option.textContent = nome;
+        selectAba.appendChild(option);
       });
 
-      tabela.appendChild(tr);
-    });
+      abasContainer.hidden = abas.length <= 1;
+      selectAba.onchange = () => carregarAba(selectAba.value);
+    }
 
-    preview.appendChild(tabela);
-  }
+    function carregarAba(nome) {
+      const sheet = workbookGlobal.Sheets[nome];
+      const dados = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      processarDados(dados);
+    }
 
-  /* ================= GERENCIAMENTO DE COLUNAS ================= */
+    /* ================= PREVIEW ================= */
 
-  function montarGerenciamentoColunas(cabecalhos) {
-    colunasContainer.innerHTML = '';
-    columnConfig = [];
+    function processarDados(dados) {
+      dadosAtuais = dados;
+      renderPreview(dados);
+      montarGerenciamentoColunas(dados[0]);
+    }
 
-    cabecalhos.forEach((nome, index) => {
-      const config = {
-        index,
-        original: nome || `Coluna ${index + 1}`,
-        novoNome: nome || `Coluna ${index + 1}`,
-        excluir: false
-      };
+    function renderPreview(dados) {
+      preview.innerHTML = '';
 
-      columnConfig.push(config);
-
-      const wrapper = document.createElement('div');
-      wrapper.className = 'coluna-item';
-
-      wrapper.innerHTML = `
-        <label>
-          <input type="checkbox" data-index="${index}">
-          Excluir
-        </label>
-
-        <span class="coluna-original">
-          ${config.original}
-        </span>
-
-        <input
-          type="text"
-          value="${config.novoNome}"
-          data-rename="${index}"
-          aria-label="Renomear coluna ${config.original}"
-        >
-      `;
-
-      colunasContainer.appendChild(wrapper);
-    });
-
-    colunasSection.hidden = false;
-
-    bindEventosColunas();
-  }
-
-  function bindEventosColunas() {
-    document.querySelectorAll('[data-index]').forEach(cb => {
-      cb.addEventListener('change', e => {
-        const i = e.target.dataset.index;
-        columnConfig[i].excluir = e.target.checked;
-      });
-    });
-
-    document.querySelectorAll('[data-rename]').forEach(input => {
-      input.addEventListener('input', e => {
-        const i = e.target.dataset.rename;
-        columnConfig[i].novoNome = e.target.value.trim();
-      });
-    });
-  }
-
-    <script>
-  const btnAplicar = document.getElementById('btn-aplicar');
-  const acoesSection = document.getElementById('acoes-section');
-  const relatorioSection = document.getElementById('relatorio-section');
-  const relatorioDiv = document.getElementById('relatorio');
-
-  let dadosProcessados = [];
-
-  btnAplicar.addEventListener('click', aplicarColunasEValidar);
-
-  function aplicarColunasEValidar() {
-    if (!dadosAtuais.length) return;
-
-    const cabecalhoOriginal = dadosAtuais[0];
-    const linhas = dadosAtuais.slice(1);
-
-    const colunasAtivas = columnConfig.filter(c => !c.excluir);
-
-    const novoCabecalho = colunasAtivas.map(c => c.novoNome || c.original);
-
-    let linhasValidas = [];
-    let linhasRemovidas = 0;
-    let camposVazios = 0;
-
-    linhas.forEach(linha => {
-      // Remove colunas excluídas
-      const novaLinha = colunasAtivas.map(c => linha[c.index]);
-
-      // Verifica linha lixo
-      if (linhaLixo(novaLinha)) {
-        linhasRemovidas++;
+      if (!dados || dados.length === 0) {
+        preview.innerHTML = '<p>Planilha vazia.</p>';
         return;
       }
 
-      // Validação de campos vazios
-      novaLinha.forEach(valor => {
-        if (valorVazio(valor)) {
-          camposVazios++;
-        }
+      const tabela = document.createElement('table');
+      tabela.className = 'preview-table';
+
+      dados.slice(0, 5).forEach((linha, index) => {
+        const tr = document.createElement('tr');
+        linha.forEach(celula => {
+          const cel = document.createElement(index === 0 ? 'th' : 'td');
+          cel.textContent = celula ?? '';
+          tr.appendChild(cel);
+        });
+        tabela.appendChild(tr);
       });
 
-      linhasValidas.push(novaLinha);
-    });
-
-    dadosProcessados = [novoCabecalho, ...linhasValidas];
-
-    exibirRelatorio({
-      totalLinhas: linhas.length,
-      linhasValidas: linhasValidas.length,
-      linhasRemovidas,
-      camposVazios
-    });
-  }
-
-  /* ================= VALIDAÇÕES ================= */
-
-  function valorVazio(valor) {
-    return (
-      valor === null ||
-      valor === undefined ||
-      (typeof valor === 'string' && valor.trim() === '')
-    );
-  }
-
-  function linhaLixo(linha) {
-    return linha.every(celula =>
-      valorVazio(celula) ||
-      /^[\-\*\_]+$/.test(String(celula).trim())
-    );
-  }
-
-  /* ================= RELATÓRIO ================= */
-
-  function exibirRelatorio(resumo) {
-    relatorioDiv.innerHTML = `
-      <ul>
-        <li><strong>Total de linhas analisadas:</strong> ${resumo.totalLinhas}</li>
-        <li><strong>Linhas válidas:</strong> ${resumo.linhasValidas}</li>
-        <li><strong>Linhas removidas (lixo):</strong> ${resumo.linhasRemovidas}</li>
-        <li><strong>Campos vazios encontrados:</strong> ${resumo.camposVazios}</li>
-      </ul>
-    `;
-
-    relatorioSection.hidden = false;
-  }
-
-  /* Exibir botão quando colunas estiverem prontas */
-  const observer = new MutationObserver(() => {
-    if (columnConfig.length) {
-      acoesSection.hidden = false;
+      preview.appendChild(tabela);
     }
-  });
 
-  observer.observe(document.getElementById('colunas-container'), {
-    childList: true
-  });
-</script>
+    /* ================= COLUNAS ================= */
 
+    function montarGerenciamentoColunas(cabecalhos) {
+      colunasContainer.innerHTML = '';
+      columnConfig = [];
+
+      cabecalhos.forEach((nome, index) => {
+        const config = {
+          index,
+          original: nome || `Coluna ${index + 1}`,
+          novoNome: nome || `Coluna ${index + 1}`,
+          excluir: false
+        };
+
+        columnConfig.push(config);
+
+        const div = document.createElement('div');
+        div.className = 'coluna-item';
+
+        div.innerHTML = `
+          <label>
+            <input type="checkbox" data-index="${index}">
+            Excluir
+          </label>
+
+          <span class="coluna-original">
+            ${config.original}
+          </span>
+
+          <input
+            type="text"
+            value="${config.novoNome}"
+            data-rename="${index}"
+            aria-label="Renomear coluna ${config.original}"
+          >
+        `;
+
+        colunasContainer.appendChild(div);
+      });
+
+      colunasSection.hidden = false;
+      acoesSection.hidden = false;
+
+      bindEventosColunas();
+    }
+
+    function bindEventosColunas() {
+      document.querySelectorAll('[data-index]').forEach(cb => {
+        cb.addEventListener('change', e => {
+          columnConfig[e.target.dataset.index].excluir = e.target.checked;
+        });
+      });
+
+      document.querySelectorAll('[data-rename]').forEach(input => {
+        input.addEventListener('input', e => {
+          columnConfig[e.target.dataset.rename].novoNome =
+            e.target.value.trim();
+        });
+      });
+    }
+
+    /* ================= APLICAÇÃO + VALIDAÇÃO ================= */
+
+    function aplicarColunasEValidar() {
+      const linhas = dadosAtuais.slice(1);
+      const colunasAtivas = columnConfig.filter(c => !c.excluir);
+
+      const novoCabecalho = colunasAtivas.map(c => c.novoNome || c.original);
+
+      let linhasValidas = [];
+      let linhasRemovidas = 0;
+      let camposVazios = 0;
+
+      linhas.forEach(linha => {
+        const novaLinha = colunasAtivas.map(c => linha[c.index]);
+
+        if (linhaLixo(novaLinha)) {
+          linhasRemovidas++;
+          return;
+        }
+
+        novaLinha.forEach(valor => {
+          if (valorVazio(valor)) camposVazios++;
+        });
+
+        linhasValidas.push(novaLinha);
+      });
+
+      dadosProcessados = [novoCabecalho, ...linhasValidas];
+
+      exibirRelatorio({
+        total: linhas.length,
+        validas: linhasValidas.length,
+        removidas: linhasRemovidas,
+        vazios: camposVazios
+      });
+    }
+
+    function valorVazio(valor) {
+      return (
+        valor === null ||
+        valor === undefined ||
+        (typeof valor === 'string' && valor.trim() === '')
+      );
+    }
+
+    function linhaLixo(linha) {
+      return linha.every(c =>
+        valorVazio(c) ||
+        /^[\-\*\_]+$/.test(String(c).trim())
+      );
+    }
+
+    /* ================= RELATÓRIO ================= */
+
+    function exibirRelatorio(r) {
+      relatorioDiv.innerHTML = `
+        <ul>
+          <li><strong>Linhas analisadas:</strong> ${r.total}</li>
+          <li><strong>Linhas válidas:</strong> ${r.validas}</li>
+          <li><strong>Linhas removidas:</strong> ${r.removidas}</li>
+          <li><strong>Campos vazios:</strong> ${r.vazios}</li>
+        </ul>
+      `;
+      relatorioSection.hidden = false;
+    }
+  </script>
 
 </body>
 </html>
