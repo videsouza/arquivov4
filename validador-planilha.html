@@ -241,32 +241,57 @@
     preview.appendChild(table);
   }
 
-  function montarGerenciamentoColunas(cabecalhos) {
-    colunasContainer.innerHTML = '';
-    columnConfig = [];
+function montarGerenciamentoColunas(cabecalhos) {
+  colunasContainer.innerHTML = '';
+  columnConfig = [];
 
-    cabecalhos.forEach((n, i) => {
-      columnConfig.push({ index: i, original: n, novoNome: n, excluir: false });
-
-      const div = document.createElement('div');
-      div.className = 'coluna-item';
-      div.innerHTML = `
-        <label><input type="checkbox" data-i="${i}"> Excluir</label>
-        <span>${n}</span>
-        <input type="text" value="${n}" data-r="${i}">
-      `;
-      colunasContainer.appendChild(div);
+  cabecalhos.forEach((nome, i) => {
+    columnConfig.push({
+      index: i,
+      original: nome,
+      novoNome: nome,
+      excluir: false
     });
 
-    colunasSection.hidden = false;
-    acoesSection.hidden = false;
+    const item = document.createElement('div');
+    item.className = 'coluna-item';
 
-    document.querySelectorAll('[data-i]').forEach(cb =>
-      cb.onchange = e => columnConfig[e.target.dataset.i].excluir = e.target.checked);
+    item.innerHTML = `
+      <div class="coluna-header">
+        <span class="coluna-num">#${i + 1}</span>
+        <span class="coluna-original">${nome}</span>
+      </div>
 
-    document.querySelectorAll('[data-r]').forEach(inp =>
-      inp.oninput = e => columnConfig[e.target.dataset.r].novoNome = e.target.value);
-  }
+      <div class="coluna-actions">
+        <label>
+          <input type="checkbox" data-i="${i}">
+          Excluir
+        </label>
+
+        <label>
+          Novo nome
+          <input type="text" value="${nome}" data-r="${i}">
+        </label>
+      </div>
+    `;
+
+    colunasContainer.appendChild(item);
+  });
+
+  colunasSection.hidden = false;
+  acoesSection.hidden = false;
+
+  document.querySelectorAll('[data-i]').forEach(cb => {
+    cb.onchange = e =>
+      columnConfig[e.target.dataset.i].excluir = e.target.checked;
+  });
+
+  document.querySelectorAll('[data-r]').forEach(inp => {
+    inp.oninput = e =>
+      columnConfig[e.target.dataset.r].novoNome = e.target.value;
+  });
+}
+
 
   document.getElementById('btn-aplicar').onclick = aplicarColunas;
 
