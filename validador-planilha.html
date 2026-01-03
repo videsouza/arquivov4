@@ -25,66 +25,356 @@
 
     <h1>Validador de Planilhas</h1>
 
-    <!-- PASSO 1 -->
+    <!-- ================= PASSO 1 ================= -->
     <section class="modulo">
       <header class="modulo-header">
         <h2>1. Seleção da planilha</h2>
-        <p class="modulo-desc">
-          Envie o arquivo que será analisado.
-        </p>
+        <p class="modulo-desc">Envie o arquivo que será analisado.</p>
       </header>
 
       <div class="modulo-conteudo">
-        <input type="file" accept=".csv,.xls,.xlsx">
+        <input type="file" id="arquivo" accept=".csv,.xls,.xlsx">
+        <div id="abas-container" hidden>
+          <label for="aba">Selecionar aba</label>
+          <select id="aba"></select>
+        </div>
       </div>
     </section>
 
-    <!-- PASSO 2 -->
+    <!-- ================= PASSO 2 ================= -->
     <section class="modulo">
       <header class="modulo-header">
         <h2>2. Pré-visualização</h2>
-        <p class="modulo-desc">
-          Visualização inicial dos dados carregados.
-        </p>
+        <p class="modulo-desc">Visualização inicial dos dados carregados.</p>
       </header>
 
       <div class="modulo-conteudo preview-wrapper">
-        <p>(Preview será exibido aqui)</p>
+        <div id="preview">
+          <p>Nenhum arquivo carregado.</p>
+        </div>
       </div>
     </section>
 
-    <!-- PASSO 3 -->
-    <section class="modulo">
+    <!-- ================= PASSO 2.5 ================= -->
+    <section class="modulo" id="estrutura-section" hidden>
+      <header class="modulo-header">
+        <h2>Estrutura da planilha</h2>
+        <p class="modulo-desc">
+          Informe onde começam os dados e se há cabeçalho.
+        </p>
+      </header>
+
+      <div class="modulo-conteudo">
+        <fieldset>
+          <label>
+            <input type="radio" name="temCabecalho" value="sim" checked>
+            A planilha possui cabeçalho
+          </label>
+          <br>
+          <label>
+            <input type="radio" name="temCabecalho" value="nao">
+            A planilha não possui cabeçalho
+          </label>
+        </fieldset>
+
+        <label for="linha-inicial">Linha inicial dos dados</label>
+        <input type="number" id="linha-inicial" value="2" min="1">
+
+        <br><br>
+        <button id="btn-definir-estrutura">Confirmar estrutura</button>
+      </div>
+    </section>
+
+    <!-- ================= PASSO 3 ================= -->
+    <section class="modulo" id="colunas-section" hidden>
       <header class="modulo-header">
         <h2>3. Gerenciamento de colunas</h2>
         <p class="modulo-desc">
-          Defina quais colunas serão mantidas ou excluídas.
+          Defina quais colunas serão mantidas e seus nomes finais.
         </p>
       </header>
 
       <div class="modulo-conteudo">
-        <p>(Gerenciamento de colunas aqui)</p>
+        <div id="colunas-container"></div>
       </div>
     </section>
 
-    <!-- PASSO 4 -->
-    <section class="modulo">
+    <!-- ================= PASSO 4 ================= -->
+    <section class="modulo" id="acoes-section" hidden>
       <header class="modulo-header">
-        <h2>4. Validação e exportação</h2>
-        <p class="modulo-desc">
-          Aplicação das regras e download do arquivo tratado.
-        </p>
+        <h2>4. Validação</h2>
+        <p class="modulo-desc">Aplicação das regras e análise dos dados.</p>
       </header>
 
       <div class="modulo-conteudo">
-        <button>Aplicar e validar</button>
-        <button>Baixar CSV</button>
-        <button>Baixar XLSX</button>
+        <button id="btn-aplicar">Aplicar colunas e validar</button>
+      </div>
+    </section>
+
+    <!-- ================= RELATÓRIO ================= -->
+    <section class="modulo" id="relatorio-section" hidden aria-live="polite">
+      <header class="modulo-header">
+        <h2>Relatório</h2>
+        <p class="modulo-desc">Resultado da validação.</p>
+      </header>
+
+      <div class="modulo-conteudo" id="relatorio"></div>
+    </section>
+
+    <!-- ================= EXPORTAÇÃO ================= -->
+    <section class="modulo" id="exportacao-section" hidden>
+      <header class="modulo-header">
+        <h2>Exportação</h2>
+        <p class="modulo-desc">Baixe a planilha tratada.</p>
+      </header>
+
+      <div class="modulo-conteudo">
+        <button id="btn-exportar-csv">Baixar CSV</button>
+        <button id="btn-exportar-xlsx">Baixar XLSX</button>
       </div>
     </section>
 
   </div>
 </main>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<script>
+/* ================= VARIÁVEIS ================= */
+const inputArquivo = document.getElementById('arquivo');
+const preview = document.getElementById('preview');
+const abasContainer = document.getElementById('abas-container');
+const selectAba = document.getElementById('aba');
+
+const estruturaSection = document.getElementById('estrutura-section');
+const colunasSection = document.getElementById('colunas-section');
+const colunasContainer = document.getElementById('colunas-container');
+const acoesSection = document.getElementById('acoes-section');
+const relatorioSection = document.getElementById('relatorio-section');
+const exportacaoSection = document.getElementById('exportacao-section');
+
+let workbookGlobal = null;
+let dadosAtuais = [];
+let columnConfig = [];
+let dadosProcessados = [];
+
+/* ================= UPLOAD ================= */
+inputArquivo.addEventListener('change', handleUpload);
+
+function handleUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  resetarInterface();
+
+  const reader = new FileReader();
+
+  if (file.name.toLowerCase().endsWith('.csv')) {
+    reader.onload = ev => {
+      const res = Papa.parse(ev.target.result, { skipEmptyLines: false });
+      abasContainer.hidden = true;
+      prepararDados(res.data);
+    };
+    reader.readAsText(file);
+  } else {
+    reader.onload = ev => {
+      const data = new Uint8Array(ev.target.result);
+      workbookGlobal = XLSX.read(data, { type: 'array' });
+      popularAbas(workbookGlobal.SheetNames);
+      carregarAba(workbookGlobal.SheetNames[0]);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function popularAbas(abas) {
+  selectAba.innerHTML = '';
+  abas.forEach(n => {
+    const o = document.createElement('option');
+    o.value = n;
+    o.textContent = n;
+    selectAba.appendChild(o);
+  });
+  abasContainer.hidden = abas.length <= 1;
+  selectAba.onchange = () => carregarAba(selectAba.value);
+}
+
+function carregarAba(nome) {
+  const sheet = workbookGlobal.Sheets[nome];
+  prepararDados(XLSX.utils.sheet_to_json(sheet, { header: 1 }));
+}
+
+/* ================= PREPARAÇÃO ================= */
+function prepararDados(dados) {
+  dadosAtuais = dados;
+  renderPreview(dados);
+  estruturaSection.hidden = false;
+}
+
+/* ================= PREVIEW ================= */
+function renderPreview(dados) {
+  preview.innerHTML = '';
+
+  if (!dados.length) return;
+
+  const table = document.createElement('table');
+  table.className = 'preview-table';
+
+  const thead = document.createElement('thead');
+  const trh = document.createElement('tr');
+
+  dados[0].forEach((_, i) => {
+    const th = document.createElement('th');
+    th.innerHTML = `<div>#${i + 1}</div>`;
+    trh.appendChild(th);
+  });
+
+  thead.appendChild(trh);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  dados.slice(0, 5).forEach(l => {
+    const tr = document.createElement('tr');
+    l.forEach(c => {
+      const td = document.createElement('td');
+      td.textContent = c ?? '';
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  preview.appendChild(table);
+}
+
+/* ================= ESTRUTURA ================= */
+document.getElementById('btn-definir-estrutura')
+  .addEventListener('click', definirEstrutura);
+
+function definirEstrutura() {
+  const possuiCabecalho =
+    document.querySelector('input[name="temCabecalho"]:checked').value === 'sim';
+
+  const linhaInicial =
+    parseInt(document.getElementById('linha-inicial').value, 10) - 1;
+
+  let cabecalhos;
+  let dadosLimpos;
+
+  if (possuiCabecalho) {
+    cabecalhos = dadosAtuais[linhaInicial];
+    dadosLimpos = dadosAtuais.slice(linhaInicial + 1);
+  } else {
+    cabecalhos = dadosAtuais[linhaInicial].map((_, i) => `Coluna ${i + 1}`);
+    dadosLimpos = dadosAtuais.slice(linhaInicial);
+  }
+
+  dadosAtuais = [cabecalhos, ...dadosLimpos];
+  montarGerenciamentoColunas(cabecalhos);
+  renderPreview(dadosAtuais);
+
+  estruturaSection.hidden = true;
+}
+
+/* ================= COLUNAS ================= */
+function montarGerenciamentoColunas(cabecalhos) {
+  colunasContainer.innerHTML = '';
+  columnConfig = [];
+
+  cabecalhos.forEach((nome, i) => {
+    columnConfig.push({ index: i, original: nome, novoNome: nome, excluir: false });
+
+    const div = document.createElement('div');
+    div.className = 'coluna-item';
+    div.innerHTML = `
+      <strong>#${i + 1}</strong> ${nome}
+      <br>
+      <label><input type="checkbox" data-i="${i}"> Excluir</label>
+      <br>
+      <input type="text" value="${nome}" data-r="${i}">
+    `;
+    colunasContainer.appendChild(div);
+  });
+
+  colunasSection.hidden = false;
+  acoesSection.hidden = false;
+
+  document.querySelectorAll('[data-i]').forEach(cb =>
+    cb.onchange = e => columnConfig[e.target.dataset.i].excluir = e.target.checked);
+
+  document.querySelectorAll('[data-r]').forEach(inp =>
+    inp.oninput = e => columnConfig[e.target.dataset.r].novoNome = e.target.value);
+}
+
+/* ================= APLICAÇÃO ================= */
+document.getElementById('btn-aplicar').onclick = aplicarColunas;
+
+function aplicarColunas() {
+  const linhas = dadosAtuais.slice(1);
+  const colAtivas = columnConfig.filter(c => !c.excluir);
+  const cabecalho = colAtivas.map(c => c.novoNome);
+
+  let removidas = 0;
+  let vazios = 0;
+  let validas = [];
+
+  linhas.forEach(l => {
+    const nova = colAtivas.map(c => l[c.index]);
+    if (linhaLixo(nova)) { removidas++; return; }
+    nova.forEach(v => { if (valorVazio(v)) vazios++; });
+    validas.push(nova);
+  });
+
+  dadosProcessados = [cabecalho, ...validas];
+
+  document.getElementById('relatorio').innerHTML = `
+    <ul>
+      <li>Linhas analisadas: ${linhas.length}</li>
+      <li>Linhas válidas: ${validas.length}</li>
+      <li>Linhas removidas: ${removidas}</li>
+      <li>Campos vazios: ${vazios}</li>
+    </ul>
+  `;
+
+  relatorioSection.hidden = false;
+  exportacaoSection.hidden = false;
+}
+
+/* ================= EXPORTAÇÃO ================= */
+document.getElementById('btn-exportar-csv').onclick = () => {
+  const csv = Papa.unparse(dadosProcessados);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'planilha_tratada.csv';
+  a.click();
+};
+
+document.getElementById('btn-exportar-xlsx').onclick = () => {
+  const ws = XLSX.utils.aoa_to_sheet(dadosProcessados);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Dados Tratados');
+  XLSX.writeFile(wb, 'planilha_tratada.xlsx');
+};
+
+/* ================= UTIL ================= */
+function valorVazio(v) {
+  return v == null || (typeof v === 'string' && v.trim() === '');
+}
+
+function linhaLixo(l) {
+  return l.every(v => valorVazio(v) || /^[\-\*]+$/.test(String(v)));
+}
+
+function resetarInterface() {
+  estruturaSection.hidden = true;
+  colunasSection.hidden = true;
+  acoesSection.hidden = true;
+  relatorioSection.hidden = true;
+  exportacaoSection.hidden = true;
+}
+</script>
 
 </body>
 </html>
